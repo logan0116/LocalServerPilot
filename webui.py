@@ -3,6 +3,8 @@
 import json
 import streamlit as st
 import asyncio
+from utils import get_server_gpu_status, get_server_model_status
+import pandas as pd
 
 st.set_page_config(layout="wide")
 
@@ -23,18 +25,6 @@ if 'server_list' not in st.session_state:
     st.session_state.server_list = load_servers()
 
 
-async def get_servers_gpu_status_single(server):
-    """
-    获取单个服务器的状态
-    :param server:
-    :return:
-    """
-    gpu_usage = 0
-    memory_usage = 0
-    temperature = 0
-    return {'gpu_usage': gpu_usage, 'memory_usage': memory_usage, 'temperature': temperature}
-
-
 async def get_servers_gpu_status(servers):
     """
     获取服务器状态
@@ -43,18 +33,9 @@ async def get_servers_gpu_status(servers):
     """
     servers_gpu_status = {}
     for server in servers:
-        server_gpu_status = await get_servers_gpu_status_single(server)
+        server_gpu_status = await get_server_gpu_status(server)
         servers_gpu_status[server['name']] = server_gpu_status
     return servers_gpu_status
-
-
-async def get_servers_model_status_single(server):
-    """
-    获取服务器上的模型状态
-    :param server:
-    :return:
-    """
-    return ['model1', 'model2']
 
 
 async def get_servers_model_status(servers):
@@ -65,7 +46,7 @@ async def get_servers_model_status(servers):
     """
     servers_model_status = {}
     for server in servers:
-        server_model_status = await get_servers_model_status_single(server)
+        server_model_status = await get_server_model_status(server)
         servers_model_status[server['name']] = server_model_status
     return servers_model_status
 
@@ -76,7 +57,7 @@ async def show_servers(servers):
     :param servers:
     :return:
     """
-    columns_layout = [2, 1, 2, 2]
+    columns_layout = [1, 2, 1, 1]
     # 获取服务器状态
     # gpu
     servers_gpu_status = await get_servers_gpu_status(servers)
@@ -101,12 +82,11 @@ async def show_servers(servers):
             with c1:
                 st.markdown(f"### {server['name']}")
             with c2:
-                st.markdown(f"User: {server['user']}")
-                st.markdown(f"IP: {server['ip']}")
+                st.markdown(f"**User**: {server['user']}")
+                st.markdown(f"**IP**: {server['ip']}")
         with col2:
-            st.markdown(f"GPU usage: {servers_gpu_status[server['name']]['gpu_usage']}%")
-            st.markdown(f"Memory: {servers_gpu_status[server['name']]['memory_usage']}%")
-            st.markdown(f"Temperature: {servers_gpu_status[server['name']]['temperature']}")
+            df = pd.DataFrame(servers_gpu_status[server['name']])
+            st.table(df)
         with col3:
             for model in servers_model_status[server['name']]:
                 st.write(model)
