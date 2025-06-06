@@ -84,26 +84,24 @@ async def show_servers():
     :param servers:
     :return:
     """
-    columns_layout = [3, 4, 4, 1]
+    columns_layout = [3, 4, 4]
     # 获取服务器状态
     # gpu
     servers_gpu_status = await get_servers_gpu_status()
     # model
     servers_model_status = await get_servers_model_status()
-    col1, col2, col3, col4 = st.columns(columns_layout)
+    col1, col2, col3 = st.columns(columns_layout)
     col1.markdown("## 服务器名称")
     col2.markdown("## GPU状态")
     col3.markdown("## 服务列表")
-    col4.markdown("## 操作")
 
     for server in st.session_state.server_list:
         # 四列
         # 1：name:user & ip
         # 2: GPU usage: 0% memory: 0% temperature: 0
         # 3: server list
-        # 4: add server & delete server
         st.markdown("---")
-        col1, col2, col3, col4 = st.columns(columns_layout, vertical_alignment="top")
+        col1, col2, col3 = st.columns(columns_layout, vertical_alignment="top")
 
         with col1:
             c1, c2 = st.columns([1, 1])
@@ -118,9 +116,6 @@ async def show_servers():
         with col3:
             df = pd.DataFrame(servers_model_status[server["name"]])
             st.dataframe(df.style.set_properties(**{"width": "200px"}))
-        with col4:
-            st.button("添加服务", key=f"add_{server['name']}")
-            st.button("删除服务", key=f"delete_{server['name']}")
 
 
 async def status_page():
@@ -134,7 +129,6 @@ async def status_page():
 
 async def config_page():
     st.title("配置卡片")
-    st.write(f"刷新时间: {get_local_time()}")
     config_list = st.session_state.config_list
     if not config_list:
         st.warning("没有配置卡片，请添加配置卡片")
