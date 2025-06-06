@@ -144,6 +144,70 @@ async def config_page():
             st.markdown(f"**停止命令**: `{config['stop_command']}`")
 
 
+async def start_service():
+    """
+    启动服务界面
+
+    整体思路是：
+
+    1.配置服务器
+    2.服务模型
+    3.操作
+
+    """
+    st.title("服务管理")
+
+    st.markdown("### 选择服务器")
+    server_names = [s["name"] for s in st.session_state.server_list]
+    selected_server = st.selectbox(
+        "服务器", server_names, key="start_service_server", label_visibility="collapsed"
+    )
+
+    st.markdown("### 选择服务")
+    available_configs = [
+        c for c in st.session_state.config_list if selected_server in c["allow_server"]
+    ]
+    config_names = [c["name"] for c in available_configs]
+    selected_config = st.selectbox(
+        "服务配置",
+        config_names,
+        key="start_service_config",
+        label_visibility="collapsed",
+    )
+
+    st.markdown("### 操作")
+    config = next(c for c in available_configs if c["name"] == selected_config)
+
+    if st.button("启动服务"):
+        client = st.session_state.server2client[selected_server]
+        try:
+            stdin, stdout, stderr = client.exec_command(config["start_command"])
+            output = stdout.read().decode()
+            st.success(f"服务启动成功:\n{output}")
+        except Exception as e:
+            st.error(f"启动失败: {str(e)}")
+
+    if st.button("停止服务"):
+        client = st.session_state.server2client[selected_server]
+        try:
+            stdin, stdout, stderr = client.exec_command(config["stop_command"])
+            output = stdout.read().decode()
+            st.success(f"服务停止成功:\n{output}")
+        except Exception as e:
+            st.error(f"停止失败: {str(e)}")
+
+    if st.button("检查状态"):
+        client = st.session_state.server2client[selected_server]
+        try:
+            stdin, stdout, stderr = client.exec_command(
+                f"ps aux | grep {config['name']}"
+            )
+            output = stdout.read().decode()
+            st.info(f"服务状态:\n{output}")
+        except Exception as e:
+            st.error(f"检查失败: {str(e)}")
+
+
 def main():
     init()
     st.markdown(
@@ -158,13 +222,16 @@ def main():
     )
     st.sidebar.title("导航")
 
-    page = st.sidebar.radio("---", ["服务器状态", "配置卡片"], index=0)
+    page = st.sidebar.radio("---", ["服务器状态", "配置卡片", "启动服务"], index=0)
     if page == "服务器状态":
         # part 1 upload papers
         asyncio.run(status_page())
     elif page == "配置卡片":
         # part 2 show papers
         asyncio.run(config_page())
+    elif page == "启动服务":
+        # part 3 start service
+        asyncio.run(start_service())
 
 
 if __name__ == "__main__":
