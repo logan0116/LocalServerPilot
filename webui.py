@@ -16,6 +16,26 @@ st.set_page_config(
 )
 
 
+class Server:
+    def __init__(self, name, ip, user, password):
+        self.name = name
+        self.ip = ip
+        self.user = user
+        self.password = password
+        self.client = None
+
+    def connect(self):
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.connect(
+            hostname=self.ip, port=22, username=self.user, password=self.password
+        )
+
+    def close(self):
+        if self.client:
+            self.client.close()
+
+
 def load_servers():
     """
     加载服务器列表从本地的文件中
@@ -38,20 +58,19 @@ def load_config_info():
     return config_info
 
 
-def init():
-    st.session_state.server_list = load_servers()
-    st.session_state.server2client = {}
-    for server in st.session_state.server_list:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(
-            hostname=server["ip"],
-            port=22,
-            username=server["user"],
-            password=server["password"],
-        )
-        st.session_state.server2client[server["name"]] = client
-    st.session_state.config_list = load_config_info()
+server_info_list = load_servers()
+
+server_list = []
+for server_info in server_info_list:
+    server = Server(
+        name=server_info["name"],
+        ip=server_info["ip"],
+        user=server_info["user"],
+        password=server_info["password"],
+    )
+    server_list.append(server)
+
+config_list = load_config_info()
 
 
 async def get_servers_gpu_status():
@@ -60,11 +79,11 @@ async def get_servers_gpu_status():
     :return:
     """
     servers_gpu_status = {}
-    for server in st.session_state.server_list:
-        server_gpu_status = await get_server_gpu_status(
-            client=st.session_state.server2client[server["name"]]
-        )
-        servers_gpu_status[server["name"]] = server_gpu_status
+    for server in server_list:
+        server.connect()
+        server_gpu_status = await get_server_gpu_status(client=server.client)
+        server.close()
+        servers_gpu_status[server.name] = server_gpu_status
     return servers_gpu_status
 
 
@@ -74,11 +93,11 @@ async def get_servers_model_status():
     :return:
     """
     servers_model_status = {}
-    for server in st.session_state.server_list:
-        server_model_status = await get_server_model_status(
-            client=st.session_state.server2client[server["name"]]
-        )
-        servers_model_status[server["name"]] = server_model_status
+    for server in server_list:
+        server.connect()
+        server_model_status = await get_server_model_status(client=server.client)
+        server.close()
+        servers_model_status[server.name] = server_model_status
     return servers_model_status
 
 
@@ -99,7 +118,7 @@ async def show_servers():
     col2.markdown("## GPU状态")
     col3.markdown("## 服务列表")
 
-    for server in st.session_state.server_list:
+    for server in server_list:
         # 四列
         # 1：name:user & ip
         # 2: GPU usage: 0% memory: 0% temperature: 0
@@ -110,15 +129,15 @@ async def show_servers():
         with col1:
             c1, c2 = st.columns([1, 1])
             with c1:
-                st.markdown(f"### {server['name']}")
+                st.markdown(f"### {server.name}")
             with c2:
-                st.markdown(f"**User**: {server['user']}")
-                st.markdown(f"**IP**: {server['ip']}")
+                st.markdown(f"**User**: {server.user}")
+                st.markdown(f"**IP**: {server.ip}")
         with col2:
-            df = pd.DataFrame(servers_gpu_status[server["name"]])
+            df = pd.DataFrame(servers_gpu_status[server.name])
             st.dataframe(df.style.set_properties(**{"width": "200px"}))
         with col3:
-            df = pd.DataFrame(servers_model_status[server["name"]])
+            df = pd.DataFrame(servers_model_status[server.name])
             st.dataframe(df.style.set_properties(**{"width": "200px"}))
 
 
@@ -127,13 +146,12 @@ async def status_page():
         st.title("服务器列表")
         st.write(f"刷新时间: {get_local_time()}")
         await show_servers()
-        await asyncio.sleep(60)  # 使用异步sleep
+        await asyncio.sleep(15)  # 使用异步sleep
         st.rerun()
 
 
 async def config_page():
     st.title("配置卡片")
-    config_list = st.session_state.config_list
     if not config_list:
         st.warning("没有配置卡片，请添加配置卡片")
         return
@@ -162,14 +180,15 @@ async def start_service():
     st.title("服务管理")
 
     st.markdown("### 选择服务器")
-    server_names = [s["name"] for s in st.session_state.server_list]
-    selected_server = st.selectbox(
+    server_names = [server.name for server in server_list]
+    selected_server_name = st.selectbox(
         "服务器", server_names, key="start_service_server", label_visibility="collapsed"
     )
+    server_index = server_names.index(selected_server_name)
 
     st.markdown("### 选择服务")
     available_configs = [
-        c for c in st.session_state.config_list if selected_server in c["allow_server"]
+        c for c in config_list if selected_server_name in c["allow_server"]
     ]
     config_names = [c["name"] for c in available_configs]
     selected_config = st.selectbox(
@@ -183,37 +202,46 @@ async def start_service():
     config = next(c for c in available_configs if c["name"] == selected_config)
 
     if st.button("启动服务"):
-        client = st.session_state.server2client[selected_server]
         try:
-            stdin, stdout, stderr = client.exec_command(config["start_command"])
+            server_list[server_index].connect()
+            stdin, stdout, stderr = server_list[server_index].client.exec_command(
+                config["start_command"]
+            )
             output = stdout.read().decode()
             st.success(f"服务启动成功:\n{output}")
         except Exception as e:
             st.error(f"启动失败: {str(e)}")
+        finally:
+            server_list[server_index].close()
 
     if st.button("停止服务"):
-        client = st.session_state.server2client[selected_server]
         try:
-            stdin, stdout, stderr = client.exec_command(config["stop_command"])
+            server_list[server_index].connect()
+            stdin, stdout, stderr = server_list[server_index].client.exec_command(
+                config["stop_command"]
+            )
             output = stdout.read().decode()
             st.success(f"服务停止成功:\n{output}")
         except Exception as e:
             st.error(f"停止失败: {str(e)}")
+        finally:
+            server_list[server_index].close()
 
     if st.button("检查状态"):
-        client = st.session_state.server2client[selected_server]
         try:
-            stdin, stdout, stderr = client.exec_command(
+            server_list[server_index].connect()
+            stdin, stdout, stderr = server_list[server_index].client.exec_command(
                 f"ps aux | grep {config['name']}"
             )
             output = stdout.read().decode()
             st.info(f"服务状态:\n{output}")
         except Exception as e:
             st.error(f"检查失败: {str(e)}")
+        finally:
+            server_list[server_index].close()
 
 
 def main():
-    init()
     st.markdown(
         """
     <style>
