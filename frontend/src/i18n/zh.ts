@@ -1,0 +1,81 @@
+export default {
+  app: {
+    title: 'LocalServerPilot',
+    dashboard: '仪表盘',
+    servers: '服务器',
+    configs: '配置',
+    services: '服务',
+    connected: '已连接',
+    disconnected: '未连接'
+  },
+  dashboard: {
+    title: '仪表盘',
+    serverStatus: '服务器状态',
+    gpuInfo: 'GPU信息',
+    containerInfo: '容器信息',
+    noServers: '暂无服务器',
+    noGpu: '无GPU信息',
+    noContainer: '无容器信息',
+    polling: '轮询中',
+    stopped: '已停止'
+  },
+  servers: {
+    title: '服务器管理',
+    add: '添加服务器',
+    edit: '编辑',
+    delete: '删除',
+    test: '测试连接',
+    name: '名称',
+    ip: 'IP地址',
+    port: '端口',
+    user: '用户名',
+    password: '密码',
+    privateKey: '私钥',
+    actions: '操作',
+    confirmDelete: '确定要删除此服务器吗？',
+    testSuccess: '连接成功',
+    testFailed: '连接失败',
+    noServers: '暂无服务器，点击"添加服务器"创建一个'
+  },
+  configs: {
+    title: '配置卡片',
+    add: '添加配置',
+    edit: '编辑',
+    delete: '删除',
+    name: '名称',
+    description: '描述',
+    imageDepend: '镜像依赖',
+    gpu: '需要GPU',
+    allowServers: '允许的服务器',
+    startCommand: '启动命令',
+    stopCommand: '停止命令',
+    actions: '操作',
+    confirmDelete: '确定要删除此配置吗？',
+    noConfigs: '暂无配置，点击"添加配置"创建一个'
+  },
+  services: {
+    title: '服务控制',
+    selectServer: '选择服务器',
+    selectConfig: '选择配置',
+    start: '启动',
+    stop: '停止',
+    status: '查看状态',
+    running: '运行中',
+    stopped: '已停止',
+    startSuccess: '服务启动成功',
+    startFailed: '服务启动失败',
+    stopSuccess: '服务停止成功',
+    stopFailed: '服务停止失败',
+    selectServerFirst: '请先选择服务器',
+    selectConfigFirst: '请先选择配置'
+  },
+  common: {
+    save: '保存',
+    cancel: '取消',
+    confirm: '确认',
+    loading: '加载中...',
+    error: '错误',
+    success: '成功',
+    refresh: '刷新'
+  }
+}

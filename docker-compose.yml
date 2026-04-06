@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../env/Dockerfile
+    ports:
+      - "18500:8000"
+    volumes:
+      - ./data:/data
+      - ./server_info.json:/data/server_info.json
+      - ./config_info.json:/data/config_info.json
+    environment:
+      - LSP_DATABASE_URL=sqlite+aiosqlite:///data/lsp.db
+      - LSP_SERVERS_FILE=/data/server_info.json
+      - LSP_CONFIGS_FILE=/data/config_info.json
+      - LSP_APP_HOST=0.0.0.0
+      - LSP_APP_PORT=8000
+    restart: unless-stopped
+    networks:
+      - lsp-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../env/Dockerfile.frontend
+    networks:
+      - lsp-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "18501:80"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - lsp-network
+
+networks:
+  lsp-network:
+    driver: bridge

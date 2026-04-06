@@ -1,30 +1,12 @@
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y python3.10 python3-pip
-# pip
-RUN pip3 install fastapi  \
-    uvicorn[standard]  \
-    jinja2  \
-    aiofiles  \
-    numpy  \
-    pandas  \
-    requests  \
-    python-multipart  \
-    openpyxl  \
-    python-docx  \
-    pymysql  \
-    tortoise-orm[aiomysql]  \
-    aiomysql  \
-    apscheduler  \
-    cryptography  \
-    redis  \
-    py2neo \
-    streamlit \
-    qdrant-client \
-    openai \
-    pyyaml \
-    aiohttp \
-    aioredis \
-    -U --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple
+FROM python:3.11-slim
 
-RUN pip3 install paramiko \
-    -U --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

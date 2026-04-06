@@ -1,0 +1,81 @@
+export default {
+  app: {
+    title: 'LocalServerPilot',
+    dashboard: 'Dashboard',
+    servers: 'Servers',
+    configs: 'Configs',
+    services: 'Services',
+    connected: 'Connected',
+    disconnected: 'Disconnected'
+  },
+  dashboard: {
+    title: 'Dashboard',
+    serverStatus: 'Server Status',
+    gpuInfo: 'GPU Info',
+    containerInfo: 'Container Info',
+    noServers: 'No servers configured',
+    noGpu: 'No GPU info',
+    noContainer: 'No container info',
+    polling: 'Polling',
+    stopped: 'Stopped'
+  },
+  servers: {
+    title: 'Server Management',
+    add: 'Add Server',
+    edit: 'Edit',
+    delete: 'Delete',
+    test: 'Test Connection',
+    name: 'Name',
+    ip: 'IP Address',
+    port: 'Port',
+    user: 'Username',
+    password: 'Password',
+    privateKey: 'Private Key',
+    actions: 'Actions',
+    confirmDelete: 'Are you sure to delete this server?',
+    testSuccess: 'Connection successful',
+    testFailed: 'Connection failed',
+    noServers: 'No servers. Click "Add Server" to create one.'
+  },
+  configs: {
+    title: 'Config Cards',
+    add: 'Add Config',
+    edit: 'Edit',
+    delete: 'Delete',
+    name: 'Name',
+    description: 'Description',
+    imageDepend: 'Image Dependencies',
+    gpu: 'GPU Required',
+    allowServers: 'Allowed Servers',
+    startCommand: 'Start Command',
+    stopCommand: 'Stop Command',
+    actions: 'Actions',
+    confirmDelete: 'Are you sure to delete this config?',
+    noConfigs: 'No configs. Click "Add Config" to create one.'
+  },
+  services: {
+    title: 'Service Control',
+    selectServer: 'Select Server',
+    selectConfig: 'Select Config',
+    start: 'Start',
+    stop: 'Stop',
+    status: 'Check Status',
+    running: 'Running',
+    stopped: 'Stopped',
+    startSuccess: 'Service started successfully',
+    startFailed: 'Failed to start service',
+    stopSuccess: 'Service stopped successfully',
+    stopFailed: 'Failed to stop service',
+    selectServerFirst: 'Please select a server first',
+    selectConfigFirst: 'Please select a config first'
+  },
+  common: {
+    save: 'Save',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    loading: 'Loading...',
+    error: 'Error',
+    success: 'Success',
+    refresh: 'Refresh'
+  }
+}
